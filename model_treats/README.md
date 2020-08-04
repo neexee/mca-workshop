@@ -13,7 +13,7 @@ antimalware.py, firewall.py, warnings.py - файлы, в которых я по
 
 TODO
 ----
-1. Сделать пример json-файла из файла sysmon с угрозами из reats.csv. Полезные ресурсы
+1. Сделать пример json-файла из файла sysmon с угрозами из treats.csv. Полезные ресурсы
 https://www.varonis.com/blog/sysmon-threat-detection-guide/
 https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/default.aspx?i=j
 
