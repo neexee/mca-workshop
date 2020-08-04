@@ -1,7 +1,10 @@
 Файлы
 -----
-system.py - файл, в котором описывается модель системы. Состоит классов System, Component, User. 
-treats.csv - файл, в котором описаны угрозы с индикаторами в журналах (пока там только sysmon)
+system.py - файл, в котором описывается модель системы. Состоит классов System, Component, User.
+
+treats.csv - файл, в котором описаны угрозы с индикаторами в журналах (пока там только sysmon). Формат получал через таблицу
+https://docs.google.com/spreadsheets/d/1-pbw87ZahzkjTVuMQdd03BlBxKRZ2SBr8Z3HkDf83RA/edit?usp=sharing
+
 antimalware.py, firewall.py, warnings.py - файлы, в которых я попробовал сделать самые просые модели антивируса, файервола и опасного события. Как-то они могут потом прогодиться, пока не знаю.
 
 Окружение
@@ -10,7 +13,7 @@ antimalware.py, firewall.py, warnings.py - файлы, в которых я по
 
 TODO
 ----
-1. Сделать пример json-файла из файла sysmon с угрозами из reats.csv. Полезные ресурсы
+1. Сделать пример json-файла из файла sysmon с угрозами из treats.csv. Полезные ресурсы
 https://www.varonis.com/blog/sysmon-threat-detection-guide/
 https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/default.aspx?i=j
 
