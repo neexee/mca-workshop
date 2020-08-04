@@ -4,7 +4,7 @@ import antimalware
 # import pdb
 # pdb.set_trace()
 
-class System(object):
+class System():
     current_id = 0
     def __init__(self, list_of_components=[], warnings=[]):
         self.loc = list_of_components
@@ -25,20 +25,22 @@ class System(object):
             self.current_id = self.current_id + 1
             
 
-class Component(object):
+class Component():
     pass
     
 class Computer(Component):
-    def __init__(self, id, firewall=None, antimalware=None, level=0, users=[]):
+    def __init__(self, id, firewall=None, antimalware=None, level=0, users=None):
         self.id = id
         self.firewall = firewall
         self.antimalware = antimalware
         self.level = level
-        self.users = users
+        if (users == None):
+            self.users = []
+            
     def add_user(self, name, level):
         pass
 
-class User(object):
+class User():
     def __init__(self, name="admin", level=0):
         self.name = name
         self.level = level
