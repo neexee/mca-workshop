@@ -1,8 +1,10 @@
 Файлы
 -----
-system.py - файл, в котором описывается модель системы. Состоит классов System, Component, User. 
+system.py - файл, в котором описывается модель системы. Состоит классов System, Component, User.
+
 treats.csv - файл, в котором описаны угрозы с индикаторами в журналах (пока там только sysmon). Формат получал через таблицу
 https://docs.google.com/spreadsheets/d/1-pbw87ZahzkjTVuMQdd03BlBxKRZ2SBr8Z3HkDf83RA/edit?usp=sharing
+
 antimalware.py, firewall.py, warnings.py - файлы, в которых я попробовал сделать самые просые модели антивируса, файервола и опасного события. Как-то они могут потом прогодиться, пока не знаю.
 
 Окружение
