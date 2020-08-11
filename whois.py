@@ -7,9 +7,15 @@ import math
 sigma = 10
 a = 3
 
+# I consealed my WHOIS_KEY, I probably send you api key through telegram without posting it on github.
+# You then can set enviroment variable WHOIS_KEY as I do in this code either through windows/linux or with
+# means of pycharm enviroment variables mechanism
+
 HOST_SITE = "https://www.whoisxmlapi.com/whoisserver/WhoisService"
 API_key =  os.environ.get('WHOIS_KEY')
 
+# The output of get_domain_score and get_ip_score functions is the probability of given domain being malicious
+# It is a float number from 0 to 1
 
 def get_domain_score(domain_name):
     return get(domain_name)
