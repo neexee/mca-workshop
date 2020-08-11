@@ -33,8 +33,9 @@ def scan(args):
             for line in logs_in:
                 log_json = json.loads(line)
                 EventID = log_json['System']['EventID']['$']
-                UtcTime = log_json['EventData']['UtcTime']
-                        
+                UtcTime_str = log_json['EventData']['UtcTime']
+                UtcTime = datetime.datetime.strptime(UtcTime_str, '%Y-%m-%d %H:%M:%S.%f')
+
                 if EventID == 1:
                     proc = ProcessCreation()
                     proc.Time = UtcTime
