@@ -38,6 +38,3 @@ def get(domain_name):
         existence_time = date.today() - date_of_creation
 
         return (normal_distribution(existence_time.days))
-
-if __name__ == "__main__":
-    get("google.com")
