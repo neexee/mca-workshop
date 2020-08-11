@@ -13,41 +13,48 @@ class ProcessCreation:
     Time: datetime.datetime
     Hashes: str
     GUID: str
+    Name: str
+    User: str
+    Host: str
 
 
 class NetworkConnection:
     Time: datetime.datetime
     IP: str
     Domain: str
+    Protocol: str
 
 
 def scan(args):
+    processList = []
+    connectionList = []
     for files in args.file:
         with open(files, "r") as logs_in:
-            filename = os.path.splitext(files)
-            with open(filename[0] + '_ip_and_domains.json', "w") as logs_out_3:
-                with open(filename[0] + '_hashes.json', "w") as logs_out_1:
-                    for num, line in enumerate(logs_in, start=1):
-                        log_json = json.loads(line)
-                        
-                        EventID = log_json['System']['EventID']['$']
-                        UtcTime = log_json['EventData']['UtcTime']
-                        
-                        if EventID == 1:
-                            proc = ProcessCreation()
-                            proc.Time = UtcTime
-                            proc.Hashes = log_json['EventData']['Hashes']
-                            proc.GUID = log_json['System']['Provider']['@Guid']
-                            net_dict = {'Record': num,"Date": proc.Time, "Hash": proc.Hashes, "GUID": proc.GUID}
-                            logs_out_1.write(json.dumps(net_dict) + '\n')
+            for line in logs_in:
+                log_json = json.loads(line)
+                EventID = log_json['System']['EventID']['$']
+                UtcTime_str = log_json['EventData']['UtcTime']
+                UtcTime = datetime.datetime.strptime(UtcTime_str, '%Y-%m-%d %H:%M:%S.%f')
 
-                        if EventID == 3:
-                            connection = NetworkConnection()
-                            connection.Time = UtcTime
-                            connection.IP = log_json['EventData']['DestinationIp']
-                            connection.domain = log_json['EventData']['DestinationHostname']
-                            net_dict = {'Record': num,"Date": connection.Time, "IP": connection.IP, "Domain": connection.domain}
-                            logs_out_3.write(json.dumps(net_dict) + '\n')
+                if EventID == 1:
+                    proc = ProcessCreation()
+                    proc.Time = UtcTime
+                    proc.Hashes = log_json['EventData']['Hashes']
+                    proc.GUID = log_json['System']['Provider']['@Guid']
+                    proc.Name = log_json['EventData']['OriginalFileName']
+                    proc.User = log_json['EventData']['User']
+                    proc.Host = log_json['System']['Computer']
+                    processList.append(proc)
+
+                if EventID == 3:
+                    connection = NetworkConnection()
+                    connection.Time = UtcTime
+                    connection.IP = log_json['EventData']['DestinationIp']
+                    connection.domain = log_json['EventData']['DestinationHostname']
+                    connection.Protocol = log_json['EventData']['Protocol']
+                    connectionList.append(connection)
+
+    return processList, connectionList
 
 
 def scan_folder(args):
