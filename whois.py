@@ -4,8 +4,6 @@ import os
 from datetime import date
 import math
 
-sigma = 10
-a = 3
 
 # I consealed my WHOIS_KEY, I probably send you api key through telegram without posting it on github.
 # You then can set enviroment variable WHOIS_KEY as I do in this code either through windows/linux or with
@@ -19,10 +17,13 @@ API_key =  os.environ.get('WHOIS_KEY')
 
 def get_domain_score(domain_name):
     return get(domain_name)
+
 def get_ip_score(ip):
     return get(ip)
 
 def normal_distribution(x):
+    sigma = 10
+    a = 3
     return (a * math.exp(-x / sigma) if a * math.exp(-x / sigma) < 1 else 1)
 
 def print_pretty_json(data):
@@ -35,12 +36,10 @@ def get(domain_name):
         except:
             raise Exception("An exception during connection to Whois server occured, check Whois service availibility.")
         data = request.json()
-        #print_pretty_json(data)
         if ("ErrorMessage" in data):
             raise Exception(data['ErrorMessage']['msg'])
         q = data['WhoisRecord']['createdDate'].split('T')
         arr = list(map(int, q[0].split('-')))
         date_of_creation = date(arr[0], arr[1], arr[2])
         existence_time = date.today() - date_of_creation
-
         return (normal_distribution(existence_time.days))
