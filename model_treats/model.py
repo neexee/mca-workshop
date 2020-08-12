@@ -26,6 +26,7 @@ class System():
         print("==================")
         for th in self.threats:
             print("\t {0} {1}".format(th.risk, th.description))
+
     def get_component(self, name):
         for i in self.components:
             if (i.name == name):
