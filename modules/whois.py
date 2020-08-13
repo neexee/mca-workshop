@@ -3,6 +3,7 @@ import requests
 import os
 from datetime import date
 import math
+import dateutil.parser
 
 
 # I consealed my WHOIS_KEY, I probably send you api key through telegram without posting it on github.
@@ -38,8 +39,7 @@ def get(domain_name):
         data = request.json()
         if ("ErrorMessage" in data):
             raise Exception(data['ErrorMessage']['msg'])
-        q = data['WhoisRecord']['createdDate'].split('T')
-        arr = list(map(int, q[0].split('-')))
-        date_of_creation = date(arr[0], arr[1], arr[2])
+
+        date_of_creation = dateutil.parser.isoparse(data['WhoisRecord']['createdDate']).date()
         existence_time = date.today() - date_of_creation
         return (normal_distribution(existence_time.days))
