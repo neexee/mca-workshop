@@ -43,8 +43,8 @@ class System():
         t = Threat(threat['eventid'], threat['risk'])
         if (threat['score_range'] != None):
             t.set_score_range(*threat['score_range']) 
-        if (threat['labels'] != None):
-            t.set_labels(threat['labels'])
+        if (threat['cmd_labels'] != None):
+            t.set_cmd_labels(threat['cmd_labels'])
         if (threat['user_level'] != None):
             t.set_user_level(threat['user_level'])
         if (threat['host_level'] != None):
@@ -55,9 +55,13 @@ class System():
     
     def get_risk_score(self, event):
         risk_score = 0.0
+        t_list = []
         for threat in self.threats:
-            risk_score = risk_score + threat.how_bad(self, event)
-        return risk_score
+            impact = threat.how_bad(self, event)
+            if impact > 0:
+                risk_score += impact
+                t_list.append(threat.description)
+        return (risk_score, t_list)
 
 class Component():
     pass
@@ -78,6 +82,7 @@ class Computer(Component):
         for user in self.users:
             if  (user.name == username):
                 return user.level
+        return 1
     
 class User():
     def __init__(self, name, level):
@@ -88,7 +93,7 @@ class Threat():
     def __init__(self, eventid, risk):
         self.eventid = eventid #what
         self.score_range = None #how bad it should be to be important
-        self.labels = None #details
+        self.cmd_labels = None #details
         self.user_level = None #who
         self.host_level = None #where
         self.risk = risk #damage
@@ -97,10 +102,10 @@ class Threat():
     def set_score_range(self, l_bound, u_bound):
         self.score_range = (l_bound, u_bound)
     
-    def set_labels(self, labels):
-        self.labels = set([])
+    def set_cmd_labels(self, labels):
+        self.cmd_labels = set([])
         for label in labels:
-            self.labels.add(label)
+            self.cmd_labels.add(label)
     
     def set_user_level(self, levels):
         self.user_level = set([])
@@ -116,55 +121,144 @@ class Threat():
         self.description = str(string)
     
     def how_bad(self, system, event):
-        if (self.eventid == event.eventid):
-            danger = 0.0
-            if (self.score_range == None):
-                danger = danger + 1
-            else:
-                danger = danger + \
-                    int(self.score_range[0] <=\
-                        event.Score <=\
-                        self.score_range[1])
-
-            comp = system.get_component(event.Host)
-            hostlevel == comp.level
-            userlevel = comp.get_user_level(event.User)
-            
-            if (self.user_level == None):
-                danger = danger + 1
-            else:
-                danger = danger + \
-                    int(self.user_level.__contains__(userlevel))
-            
-            if (self.host_level == None):
-                danger = danger + 1
-            else:
-                danger = danger + \
-                    int(self.host_level.__contains__(hostlevel))
-            
-            danger = danger + \
-                int(self.labels.__contains__(event.Name))
-            
-            danger = danger/4.0
-            
-            return self.risk*danger
+        danger = 0.0
+        score = event.Score
+        if ((self.score_range != None) and (self.score_range[0] <= score <= self.score_range[1])):
+            danger += 0.4
         
+        host__level = system.get_component(event.Host).level
+        user_level = system.get_component(event.Host).get_user_level(event.User)
+        if ((self.user_level != None) and (self.user_level.__contains__(user_level))):
+            danger += 0.2
+        if ((self.host_level != None) and (self.host_level.__contains__(host_level))):
+            danger += 0.2
+        
+        if (event.EventId == 1):
+            cmd_line = event.Details['CmdLine']
+            process_name = event.ProcessName
+            if ((process_name == 'powershell.exe') or (process_name == 'cmd.exe')):
+                for l in self.cmd_labels:
+                    if (cmd_line.find(l) > -1):
+                        danger += 1.0/len(self.cmd_labels)
+        elif (event.EventId == 3):
+            process_name = event.ProcessName
+            if (self.cmd_labels.__contains__(process_name)):
+                danger += 1.0
+        else:
+            danger += 1.0
+        
+        return self.risk*danger
+        
+            
+            
+            
+            
 if (__name__ == "__main__"):
     sys = System()
-    sys.add_component("Computer", "DESKTOP-1", 0, [User('vasya', 0),\
-                                                   User('masha', 1)])    
-    sys.add_component("Computer", "DESKTOP-2", 0, [User('petya', 0),\
-                                                   User('masha', 1)])    
-    sys.add_component("Computer", "DESKTOP-3", 0, [User('katya', 0),\
-                                                   User('masha', 1)])    
-    sys.add_component("Computer", "DESKTOP-ADMIN", 1, [User('director', 0),\
-                                                   User('masha', 1)])        
-    sys.add_threat_from_dict({'eventid':1, \
-                              'score_range':None,\
-                              'labels':['powershell.exe'],\
-                              'user_level':[0],\
-                              'host_level': None,\
-                              'risk': 100,\
-                              'description': 'Обычный пользователь запустил powershel.exe'})
+    sys.add_component("Computer", "Qishna", 0, [User('QISHNA\garip', 0)])
+    sys.add_threat_from_dict({'eventid':1, 
+                              'score_range':(5, 100),
+                              'cmd_labels':[],
+                              'user_level':None,
+                              'host_level': None,
+                              'risk': 100,
+                              'description': 'Malware detected!'})
+    
+    sys.add_threat_from_dict({'eventid':3, 
+                              'score_range':(2, 100),
+                              'cmd_labels':[],
+                              'user_level':None,
+                              'host_level': None,
+                              'risk': 100,
+                              'description': 'Bad connection detected!'})
+    
+    sys.add_threat_from_dict({'eventid':1, 
+                              'score_range':None,
+                              'cmd_labels':['CreateRemoteThread',
+                                            'SuspendThread',
+                                            'SetThreadContext',
+                                            'ResumeThread', 
+                                            'VirtualAllocEx',
+                                            'WriteProcessMemory'],
+                              'user_level':None,
+                              'host_level': None,
+                              'risk': 100,
+                              'description': 'Process Injection: Thread Execution Hijacking(T1055.003)'})
+
+    sys.add_threat_from_dict({'eventid':1, 
+                              'score_range':None,
+                              'cmd_labels':['at.exe','schtasks','taskeng.exe '],
+                              'user_level':None,
+                              'host_level': None,
+                              'risk': 100,
+                              'description': 'Scheduled Task/Job(T1053)'})
+    
+    
+    sys.add_threat_from_dict({'eventid':1, 
+                              'score_range':None,
+                              'cmd_labels':['.dll'],
+                              'user_level':None,
+                              'host_level': None,
+                              'risk': 100,
+                              'description': 'Hijack Execution Flow(T1574)'})
+    
+    sys.add_threat_from_dict({'eventid':1, 
+                              'score_range':None,
+                              'cmd_labels':['powershell.exe -ExecutionPolicy Bypass -C'],
+                              'user_level':None,
+                              'host_level': None,
+                              'risk': 100,
+                              'description': 'User Execution(T1204)'})
+    
+    sys.add_threat_from_dict({'eventid':1, 
+                              'score_range':None,
+                              'cmd_labels':['vssadmin.exe delete shadows /all /quiet',
+                                            'wbadmin.exe delete catalog -quiet',
+                                            'bcdedit.exe /set {{default}} bootstatuspolicy ignoreallfailures & bcdedit /set {{default}} recoveryenabled no'],
+                              'user_level':None,
+                              'host_level': None,
+                              'risk': 200,
+                              'description': 'Inhibit System Recovery(T1490)'})
+    
+    sys.add_threat_from_dict({'eventid':1, 
+                              'score_range':None,
+                              'cmd_labels':['sc query', 'net start >> %temp%\download', 'net start >> %TEMP%\info.dat ',
+                                            'tasklist', 'tasklist /svc', 
+                                            'net start'],
+                              'user_level':None,
+                              'host_level': None,
+                              'risk': 50,
+                              'description': 'System Service Discovery(T1007)'})
+    
+    sys.add_threat_from_dict({'eventid':1, 
+                              'score_range':None,
+                              'cmd_labels':['netstat -ano >> %temp%\download','net use',
+                                            'net session', 'netstat -anpo tcp',
+                                            'whoami', 'netstat -r', 'netstat -am', 'netstat -ano'
+                                            'netstat', 'netsh wlan show networks mode=bssid', 'netsh wlan show interfaces'
+                                            'ipconfig','GetExtendedUdpTable','arp -a','nbtstat'],
+                              'user_level':None,
+                              'host_level': None,
+                              'risk': 50,
+                              'description': 'System Network Connections Discovery(T1049)'})
+                              
+    sys.add_threat_from_dict({'eventid':1, 
+                              'score_range':None,
+                              'cmd_labels':['net use \system\share /delete', 'net use * /DELETE /Y'],
+                              'user_level':None,
+                              'host_level': None,
+                              'risk': 50,
+                              'description': 'Indicator Removal on Host(T1070)'})
+    
+    sys.add_threat_from_dict({'eventid':3, 
+                              'score_range':None,
+                              'cmd_labels':['powershell.exe'],
+                              'user_level':None,
+                              'host_level': None,
+                              'risk': 50,
+                              'description': 'Strange connection'})
+    
+    
+    
     sys.show_system()
     
