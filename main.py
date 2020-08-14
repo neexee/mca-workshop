@@ -6,7 +6,7 @@ from glob import glob
 
 import sysmon_analyser.sysmon_analyser as sysmon
 # from sysmon_analyser.riching_events import riching_events
-from model_treats.model import System, User
+from modules.threat_model import System, User
 
 
 def main():
