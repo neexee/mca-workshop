@@ -5,13 +5,13 @@ from datetime import date
 import math
 import dateutil.parser
 
-
 # I consealed my WHOIS_KEY, I probably send you api key through telegram without posting it on github.
 # You then can set enviroment variable WHOIS_KEY as I do in this code either through windows/linux or with
 # means of pycharm enviroment variables mechanism
 
 HOST_SITE = "https://www.whoisxmlapi.com/whoisserver/WhoisService"
-API_key =  os.environ.get('WHOIS_KEY')
+API_key = os.environ.get('WHOIS_KEY')
+
 
 # The output of get_domain_score and get_ip_score functions is the probability of given domain being malicious
 # It is a float number from 0 to 1
@@ -19,27 +19,31 @@ API_key =  os.environ.get('WHOIS_KEY')
 def get_domain_score(domain_name):
     return get(domain_name)
 
+
 def get_ip_score(ip):
     return get(ip)
+
 
 def normal_distribution(x):
     sigma = 10
     a = 3
-    return (a * math.exp(-x / sigma) if a * math.exp(-x / sigma) < 1 else 1)
+    return a * math.exp(-x / sigma) if a * math.exp(-x / sigma) < 1 else 1
+
 
 def print_pretty_json(data):
     print(json.dumps(data, indent=2, sort_keys=False, ensure_ascii=False))
 
-def get(domain_name):
-        request = requests.get(f"{HOST_SITE}?apiKey={API_key}&domainName={domain_name}&outputFormat=JSON&ip=1")
-        try:
-            request.raise_for_status()
-        except:
-            raise Exception("An exception during connection to Whois server occured, check Whois service availibility.")
-        data = request.json()
-        if ("ErrorMessage" in data):
-            raise Exception(data['ErrorMessage']['msg'])
 
-        date_of_creation = dateutil.parser.isoparse(data['WhoisRecord']['createdDate']).date()
-        existence_time = date.today() - date_of_creation
-        return (normal_distribution(existence_time.days))
+def get(domain_name):
+    request = requests.get(f"{HOST_SITE}?apiKey={API_key}&domainName={domain_name}&outputFormat=JSON&ip=1")
+    try:
+        request.raise_for_status()
+    except:
+        raise Exception("An exception during connection to Whois server occured, check Whois service availibility.")
+    data = request.json()
+    if "ErrorMessage" in data:
+        raise Exception(data['ErrorMessage']['msg'])
+
+    date_of_creation = dateutil.parser.isoparse(data['WhoisRecord']['createdDate']).date()
+    existence_time = date.today() - date_of_creation
+    return normal_distribution(existence_time.days)

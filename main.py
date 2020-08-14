@@ -3,19 +3,19 @@ import argparse
 import os
 from glob import glob
 
-
-import sysmon_analyser.sysmon_analyser as sysmon
-# from sysmon_analyser.riching_events import riching_events
-from model_treats.model import System, User
+from modules.threat_model import System, User
+from modules.enrichment import enrich_events
+from modules.sysmon import parse_files
 
 
 def main():
     args = _parse_args()
     files = _unfold_paths(args.paths)
+    events = parse_files(files)
+    print(f'Discovered {len(events)} events with id 1 and id 3 across {len(files)} file(s)')
 
     model = _create_model()
-    events = sysmon.parse_files(files, showlog=False)
-    print(f'Discovered {len(events)} events with id 1 and id 3 across {len(files)} file(s)')
+    enrich_events(events, showlog=True)
     for event in events:
         event.Risk = model.get_risk_score(event)
         print(event.EventId, 
@@ -149,9 +149,7 @@ def _create_model():
                               'host_level': None,
                               'risk': 50,
                               'description': 'Strange connection'})
-    
-    
-    
+
     sys.show_system()
     
     return sys
