@@ -1,0 +1,18 @@
+ID,Угроза,Подозрительные события,Потенциальные потери
+1,запуск вредоносной программы на компе обычного пользователя,"(id == sysmon[""ProcessRun""] and user_level(User) < 2 and command_line.conatins(python, powershell, bat)) or (id == sysmon[""ProcessRun""] and isbadhash(Hash))",40
+2,попытка соединения с серым айпи,"(id == sysmon[""NetworkConnection""] and isbadip(SourceIp) and user_level(User) < 2) or (id == sysmon[""CreateRemoteThread""] and isbadip(SourceIp) and user_level(User) < 2)",70
+3,запуск вредоносной программы на компе привелегированного пользователя,"(id == sysmon[""ProcessRun""] and isbadhash(Hash) and user_level(User) > 1)",100
+4,изменение реестра на компьютере обычного пользователя,((id == 12 or id == 13 or id == 14) and user_level(User) < 2),40
+5,использование wmi на компьютере обычного пользователя,((id == 19 or id == 20 or id == 21) and user_level(User) < 2),50
+6,установка драйвера на компе привелегированного пользователя,(id == sysmon([DriverLoad]) and user_level(User) < 2),60
+7,попытка подбора пароля к защищаемому файлу,(count(PermissionDenied) > 5),100
+
+
+
+
+
+
+Threat:
+	Description: str
+	Risk: float
+	
